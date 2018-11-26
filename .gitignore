@@ -1,3 +1,6 @@
 .idea
 
-checkpoints/*.pkl
+**/__pycache__
+checkpoints/**/*.pkl
+data
+*.txt
