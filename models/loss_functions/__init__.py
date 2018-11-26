@@ -1,1 +1,1 @@
-from models.loss_functions.loss import Loss
+from models.loss_functions.lsaloss import LSALoss

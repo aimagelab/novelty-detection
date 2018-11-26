@@ -1,14 +1,28 @@
 import torch
 import torch.nn as nn
+from models.base import BaseModule
 
 
-class ReconstructionLoss(nn.Module):
-
+class ReconstructionLoss(BaseModule):
+    """
+    Implements the reconstruction loss.
+    """
     def __init__(self):
+        # type: () -> None
+        """
+        Class constructor.
+        """
         super(ReconstructionLoss, self).__init__()
 
     def forward(self, x, x_r):
+        # type: (FloatTensor, FloatTensor) -> FloatTensor
+        """
+        Forward propagation.
 
+        :param x: the batch of input samples.
+        :param x_r: the batch of reconstructions.
+        :return: the mean reconstruction loss (averaged along the batch axis).
+        """
         L = torch.pow((x - x_r), 2)
 
         while L.dim() > 1:

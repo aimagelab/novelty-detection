@@ -1,20 +1,40 @@
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from models.base import BaseModule
+
+from torch import FloatTensor
 
 
-class AutoregressionLoss(nn.Module):
-
+class AutoregressionLoss(BaseModule):
+    """
+    Implements the autoregression loss.
+    Given a representation and the estimated cpds, provides
+    the log-likelihood of the representation under the estimated prior.
+    """
     def __init__(self, cpd_channels):
+        # type: (int) -> None
+        """
+        Class constructor.
+
+        :param cpd_channels: number of bins in which the multinomial works.
+        """
         super(AutoregressionLoss, self).__init__()
 
         self.cpd_channels = cpd_channels
 
+        # Avoid nans
         self.eps = np.finfo(float).eps
-        self.pi = np.pi
 
     def forward(self, z, z_dist):
+        # type: (FloatTensor, FloatTensor) -> FloatTensor
+        """
+        Forward propagation.
+
+        :param z: the batch of latent representations.
+        :param z_dist: the batch of estimated cpds.
+        :return: the mean log-likelihood (averaged along the batch axis).
+        """
 
         z_d = z.detach()
 

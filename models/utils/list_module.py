@@ -2,6 +2,10 @@ import torch.nn as nn
 
 
 class ListModule(nn.Module):
+    """
+    Pytorch list module.
+    See [1] for details
+    """
     def __init__(self, *args):
         super(ListModule, self).__init__()
         idx = 0
@@ -22,3 +26,9 @@ class ListModule(nn.Module):
 
     def __len__(self):
         return len(self._modules)
+
+"""
+References
+----------
+[1] https://discuss.pytorch.org/t/list-of-nn-module-in-a-nn-module/219
+"""

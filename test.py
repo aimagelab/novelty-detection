@@ -1,7 +1,7 @@
-from datasets.mnist import MNIST
-from datasets.cifar10 import CIFAR10
-from models.LSA_mnist import LSAMNIST
-from models.LSA_cifar import LSACIFAR10
+from datasets import MNIST
+from datasets import CIFAR10
+from models import LSAMNIST
+from models import LSACIFAR10
 from result_helpers import OneClassResultHelper
 from utils import set_random_seed
 
@@ -36,6 +36,3 @@ def test_cifar():
     # Set up result helper and perform test
     helper = OneClassResultHelper(dataset, model, checkpoints_dir='checkpoints/cifar10/', output_file='cifar10.txt')
     helper.test_one_class_classification()
-
-
-test_cifar()

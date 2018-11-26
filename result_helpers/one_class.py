@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from datasets.base import DatasetBase
 from models.base import BaseModule
-from models.loss_functions import Loss
+from models.loss_functions import LSALoss
 from utils import novelty_score
 
 
@@ -35,7 +35,7 @@ class OneClassResultHelper(object):
         self.output_file = output_file
 
         # Set up loss function
-        self.loss = Loss(cpd_channels=100)
+        self.loss = LSALoss(cpd_channels=100)
 
     @torch.no_grad()
     def test_one_class_classification(self):

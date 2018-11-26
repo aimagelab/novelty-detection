@@ -1,13 +1,25 @@
 import torch
 import torch.nn as nn
+from torch import FloatTensor
 
 from models.base import BaseModule
 
 
 class TemporallySharedFullyConnection(BaseModule):
+    """
+    Implements a temporally-shared fully connection.
+    Processes a time series of feature vectors and performs
+    the same linear projection to all of them.
+    """
+    def __init__(self, in_features, out_features, bias=True):
+        # type: (int, int, bool) -> None
+        """
+        Class constructor.
 
-    def __init__(self, in_features: int, out_features: int, bias: bool=True):
-
+        :param in_features: number of input features.
+        :param out_features: number of output features.
+        :param bias: whether or not to add bias.
+        """
         super(TemporallySharedFullyConnection, self).__init__()
 
         self.in_features = in_features
@@ -17,18 +29,13 @@ class TemporallySharedFullyConnection(BaseModule):
         # the layer to be applied at each timestep
         self.linear = nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
 
-    def forward(self, x: torch.FloatTensor):
+    def forward(self, x):
+        # type: (FloatTensor) -> FloatTensor
         """
         Forward function.
 
-        Parameters
-        ----------
-        x: Variable
-            layer input. Has shape=(batchsize, seq_len, in_features)
-        Returns
-        -------
-        output: Variable
-            layer output. Has shape=(batchsize, seq_len, out_features)
+        :param x: layer input. Has shape=(batchsize, seq_len, in_features).
+        :return: layer output. Has shape=(batchsize, seq_len, out_features)
         """
         b, t, d = x.size()
 

@@ -1,9 +1,9 @@
 from functools import reduce
 from operator import mul
-
+from typing import Tuple
 import torch
 import torch.nn as nn
-
+from torch import FloatTensor
 from models.estimator_1D import Estimator1D
 from models.base import BaseModule
 from models.blocks_2d import DownsampleBlock
@@ -12,7 +12,17 @@ from models.blocks_2d import ResidualBlock
 
 
 class Encoder(BaseModule):
-    def __init__(self, input_shape: tuple, code_length: int):
+    """
+    CIFAR10 model encoder.
+    """
+    def __init__(self, input_shape, code_length):
+        # type: (Tuple[int, int, int], int) -> None
+        """
+        Class constructor:
+
+        :param input_shape: the shape of CIFAR10 samples.
+        :param code_length: the dimensionality of latent vectors.
+        """
         super(Encoder, self).__init__()
 
         self.input_shape = input_shape
@@ -22,6 +32,7 @@ class Encoder(BaseModule):
 
         activation_fn = nn.LeakyReLU()
 
+        # Convolutional network
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=3, bias=False),
             activation_fn,
@@ -32,6 +43,7 @@ class Encoder(BaseModule):
         )
         self.deepest_shape = (256, h // 8, w // 8)
 
+        # FC network
         self.fc = nn.Sequential(
             nn.Linear(in_features=reduce(mul, self.deepest_shape), out_features=256),
             nn.BatchNorm1d(num_features=256),
@@ -40,8 +52,14 @@ class Encoder(BaseModule):
             nn.Sigmoid()
         )
 
-    def forward(self, x: torch.FloatTensor):
+    def forward(self, x):
+        # types: (FloatTensor) -> FloatTensor
+        """
+        Forward propagation.
 
+        :param x: the input batch of images.
+        :return: the batch of latent vectors.
+        """
         h = x
         h = self.conv(h)
         h = h.view(len(h), -1)
@@ -51,7 +69,18 @@ class Encoder(BaseModule):
 
 
 class Decoder(BaseModule):
-    def __init__(self, code_length: int, deepest_shape: tuple, output_shape: tuple):
+    """
+    CIFAR10 model decoder.
+    """
+    def __init__(self, code_length, deepest_shape, output_shape):
+        # type: (int, Tuple[int, int, int], Tuple[int, int, int]) -> None
+        """
+        Class constructor.
+
+        :param code_length: the dimensionality of latent vectors.
+        :param deepest_shape: the dimensionality of the encoder's deepest convolutional map.
+        :param output_shape: the shape of CIFAR10 samples.
+        """
         super(Decoder, self).__init__()
 
         self.code_length = code_length
@@ -60,6 +89,7 @@ class Decoder(BaseModule):
 
         activation_fn = nn.LeakyReLU()
 
+        # FC network
         self.fc = nn.Sequential(
             nn.Linear(in_features=code_length, out_features=256),
             nn.BatchNorm1d(num_features=256),
@@ -69,6 +99,7 @@ class Decoder(BaseModule):
             activation_fn
         )
 
+        # Convolutional network
         self.conv = nn.Sequential(
             UpsampleBlock(channel_in=256, channel_out=128, activation_fn=activation_fn),
             UpsampleBlock(channel_in=128, channel_out=64, activation_fn=activation_fn),
@@ -78,7 +109,13 @@ class Decoder(BaseModule):
         )
 
     def forward(self, x: torch.FloatTensor):
+        # types: (FloatTensor) -> FloatTensor
+        """
+        Forward propagation.
 
+        :param x: the batch of latent vectors.
+        :return: the batch of reconstructions.
+        """
         h = x
         h = self.fc(h)
         h = h.view(len(h), *self.deepest_shape)
@@ -89,39 +126,60 @@ class Decoder(BaseModule):
 
 
 class LSACIFAR10(BaseModule):
+    """
+    LSA model for CIFAR10 one-class classification.
+    """
+    def __init__(self,  input_shape, code_length, cpd_channels):
+        # type: (Tuple[int, int, int], int, int) -> None
+        """
+        Class constructor.
 
-    def __init__(self,  input_shape: tuple, code_length: int, cpd_channels: int):
-
+        :param input_shape: the shape of CIFAR10 samples.
+        :param code_length: the dimensionality of latent vectors.
+        :param cpd_channels: number of bins in which the multinomial works.
+        """
         super(LSACIFAR10, self).__init__()
 
         self.input_shape = input_shape
         self.code_length = code_length
 
+        # Build encoder
         self.encoder = Encoder(
             input_shape=input_shape,
             code_length=code_length
         )
 
+        # Build decoder
         self.decoder = Decoder(
             code_length=code_length,
             deepest_shape=self.encoder.deepest_shape,
             output_shape=input_shape
         )
 
+        # Build estimator
         self.estimator = Estimator1D(
             code_length=code_length,
             fm_list=[32, 32, 32, 32],
             cpd_channels=cpd_channels
         )
 
-    def forward(self, x: torch.FloatTensor):
+    def forward(self, x):
+        # type: (FloatTensor) -> Tuple[FloatTensor, FloatTensor, FloatTensor]
+        """
+        Forward propagation.
 
+        :param x: the input batch of images.
+        :return: a tuple of FloatTensors holding reconstructions, latent vectors and CPD estimates.
+        """
         h = x
 
+        # Produce representations
         z = self.encoder(h)
 
+        # Estimate CPDs with autoregression
         z_dist = self.estimator(z)
 
+        # Reconstruct x
         x_r = self.decoder(z)
         x_r = x_r.view(-1, *self.input_shape)
 
