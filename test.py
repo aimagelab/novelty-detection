@@ -1,9 +1,11 @@
 from datasets import MNIST
 from datasets import CIFAR10
 from datasets import UCSDPed2
+from datasets import SHANGHAITECH
 from models import LSAMNIST
 from models import LSACIFAR10
 from models import LSAUCSD
+from models import LSAShanghaiTech
 from result_helpers import OneClassResultHelper
 from result_helpers import VideoAnomalyDetectionResultHelper
 from utils import set_random_seed
@@ -58,4 +60,23 @@ def test_ucsdped2():
     helper.test_video_anomaly_detection()
 
 
-test_ucsdped2()
+def test_shanghaitech():
+    # type: () -> None
+    """
+    Performs video anomaly detection tests on ShanghaiTech.
+    """
+    set_random_seed(30101990)
+
+    # Build dataset and model
+    dataset = SHANGHAITECH(path='data/SHANGHAITECH')
+    model = LSAShanghaiTech(input_shape=dataset.shape, code_length=64, cpd_channels=100).cuda().eval()
+
+    # Set up result helper and perform test
+    helper = VideoAnomalyDetectionResultHelper(dataset,
+                                               model,
+                                               checkpoint='checkpoints/shanghaitech.pkl',
+                                               output_file='shanghaitech.txt')
+    helper.test_video_anomaly_detection()
+
+
+test_shanghaitech()

@@ -10,9 +10,8 @@ from tqdm import tqdm
 from datasets.base import VideoAnomalyDetectionDataset
 from models.base import BaseModule
 from models.loss_functions import LSALoss
-from utils import novelty_score
 from utils import normalize
-from utils import concat_collate
+from utils import novelty_score
 
 
 class ResultsAccumulator:
@@ -105,7 +104,7 @@ class VideoAnomalyDetectionResultHelper(object):
 
             # Run the test
             self.dataset.test(video_id)
-            loader = DataLoader(self.dataset, collate_fn=concat_collate)
+            loader = DataLoader(self.dataset, collate_fn=self.dataset.collate_fn)
 
             sample_llk = np.zeros(shape=(len(loader) + t - 1,))
             sample_rec = np.zeros(shape=(len(loader) + t - 1,))

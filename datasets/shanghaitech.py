@@ -3,40 +3,30 @@ from os.path import basename
 from os.path import isdir
 from os.path import join
 from typing import List
-from typing import Tuple
 
+import cv2
 import numpy as np
 import skimage.io as io
-import torch
 from skimage.transform import resize
+from torch.utils.data.dataloader import default_collate
 from torchvision import transforms
 
 from datasets.base import VideoAnomalyDetectionDataset
-from datasets.transforms import ToCrops
+from datasets.transforms import RemoveBackground
 from datasets.transforms import ToFloatTensor3D
-from utils import concat_collate
 
 
-class UCSDPed2(VideoAnomalyDetectionDataset):
-    """
-    Models UCSD Ped2 dataset for video anomaly detection.
-    """
+class SHANGHAITECH(VideoAnomalyDetectionDataset):
+
     def __init__(self, path):
-        # type: (str) -> None
-        """
-        Class constructor.
 
-        :param path: The folder in which UCSD is stored.
-        """
-        super(UCSDPed2, self).__init__()
+        super(SHANGHAITECH, self).__init__()
 
-        self.path = join(path, 'UCSDped2')
+        self.path = path
+        self.test_dir = join(path, 'testing')
 
-        # Test directory
-        self.test_dir = join(self.path, 'Test')
-
-        # Transforms
-        self.transform = transforms.Compose([ToFloatTensor3D(), ToCrops(self.raw_shape, self.crop_shape)])
+        # Transform
+        self.transform = transforms.Compose([RemoveBackground(threshold=128), ToFloatTensor3D(normalize=True)])
 
         # Load all test ids
         self.test_ids = self.load_test_ids()
@@ -46,6 +36,7 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         self.cur_video_id = None
         self.cur_video_frames = None
         self.cur_video_gt = None
+        self.cur_background = None
 
     def load_test_ids(self):
         # type: () -> List[str]
@@ -54,8 +45,7 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
 
         :return: The list of test ids.
         """
-        return sorted([basename(d) for d in glob(join(self.test_dir, '**'))
-                       if isdir(d) and 'gt' not in basename(d)])
+        return sorted([basename(d) for d in glob(join(self.test_dir, 'frames', '**')) if isdir(d)])
 
     def load_test_sequence_frames(self, video_id):
         # type: (str) -> np.ndarray
@@ -65,10 +55,10 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         :param video_id: the id of the test video to be loaded
         :return: the video in a np.ndarray, with shape (n_frames, h, w, c).
         """
-        c, t, h, w = self.raw_shape
+        c, t, h, w = self.shape
 
-        sequence_dir = join(self.test_dir, video_id)
-        img_list = sorted(glob(join(sequence_dir, '*.tif')))
+        sequence_dir = join(self.test_dir,  'frames', video_id)
+        img_list = sorted(glob(join(sequence_dir, '*.jpg')))
         test_clip = []
         for img_path in img_list:
             img = io.imread(img_path)
@@ -86,13 +76,7 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         :param video_id: the id of the test video for which the groundtruth has to be loaded.
         :return: the groundtruth of the video in a np.ndarray, with shape (n_frames,).
         """
-        sequence_dir = join(self.test_dir, f'{video_id}_gt')
-        img_list = sorted(glob(join(sequence_dir, '*.bmp')))
-        clip_gt = []
-        for img_path in img_list:
-            img = io.imread(img_path) // 255
-            clip_gt.append(np.max(img))  # if at least one pixel is 1, then anomaly
-        clip_gt = np.stack(clip_gt)
+        clip_gt = np.load(join(self.test_dir,  'test_frame_mask', f'{video_id}.npy'))
         return clip_gt
 
     def test(self, video_id):
@@ -102,60 +86,48 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
 
         :param video_id: the id of the video to test.
         """
-        c, t, h, w = self.raw_shape
+        c, t, h, w = self.shape
 
         self.cur_video_id = video_id
         self.cur_video_frames = self.load_test_sequence_frames(video_id)
         self.cur_video_gt = self.load_test_sequence_gt(video_id)
+        self.cur_background = self.create_background(self.cur_video_frames)
 
         self.cur_len = len(self.cur_video_frames) - t + 1
 
     @property
     def shape(self):
-        # type: () -> Tuple[int, int, int, int]
-        """
-        Returns the shape of examples being fed to the model.
-        """
-        return self.crop_shape
-
-    @property
-    def raw_shape(self):
-        # type: () -> Tuple[int, int, int, int]
-        """
-        Returns the shape of the raw examples (prior to patches).
-        """
-        return 1, 16, 256, 384
-
-    @property
-    def crop_shape(self):
-        # type: () -> Tuple[int, int, int, int]
-        """
-        Returns the shape of examples (patches).
-        """
-        return 1, 8, 32, 32
+        return 3, 16, 256, 512
 
     @property
     def test_videos(self):
         return self.test_ids
 
     def __len__(self):
-        # type: () -> int
-        """
-        Returns the number of examples.
-        """
-        return int(self.cur_len)
+        return self.cur_len
+
+    @staticmethod
+    def create_background(video_frames):
+
+        mog = cv2.createBackgroundSubtractorMOG2()
+        for frame in video_frames:
+            img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            mog.apply(img)
+
+        # Get background
+        background = mog.getBackgroundImage()
+
+        return cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
 
     def __getitem__(self, i):
-        # type: (int) -> Tuple[torch.Tensor, torch.Tensor]
-        """
-        Provides the i-th example.
-        """
-        c, t, h, w = self.raw_shape
+
+        c, t, h, w = self.shape
 
         clip = self.cur_video_frames[i:i+t]
-        clip = np.expand_dims(clip, axis=-1)  # add channel dimension
-        sample = clip, clip
 
+        sample = clip, clip, self.cur_background
+
+        # Apply transform
         if self.transform:
             sample = self.transform(sample)
 
@@ -166,7 +138,8 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         """
         Returns a function that decides how to merge a list of examples in a batch.
         """
-        return concat_collate
+        return default_collate
 
     def __repr__(self):
-        return f'UCSD Ped2 (video id = {self.cur_video_id})'
+        return f'ShanghaiTech (video id = {self.cur_video_id})'
+

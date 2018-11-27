@@ -85,6 +85,13 @@ class VideoAnomalyDetectionDataset(DatasetBase):
         """
         pass
 
+    @property
+    def raw_shape(self):
+        """
+        Workaround!
+        """
+        return self.shape
+
     @abstractmethod
     def __getitem__(self, i):
         """
@@ -100,5 +107,13 @@ class VideoAnomalyDetectionDataset(DatasetBase):
 
         :param video_id: the id of the test video for which the groundtruth has to be loaded.
         :return: the groundtruth of the video in a np.ndarray, with shape (n_frames,).
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def collate_fn(self):
+        """
+        Returns a function that decides how to merge a list of examples in a batch.
         """
         pass
