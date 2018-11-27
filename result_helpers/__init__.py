@@ -1,1 +1,2 @@
 from result_helpers.one_class import OneClassResultHelper
+from result_helpers.video_anomaly import VideoAnomalyDetectionResultHelper

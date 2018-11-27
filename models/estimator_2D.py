@@ -65,13 +65,14 @@ class MaskedStackedConvolution(BaseModule):
 
 class Estimator2D(BaseModule):
 
-    def __init__(self, code_length: int, fm_list: list, cpd_channels: int, activation_fn: nn.Module):
+    def __init__(self, code_length: int, fm_list: list, cpd_channels: int):
         super(Estimator2D, self).__init__()
 
         self.code_length = code_length
         self.fm_list = fm_list
         self.cpd_channels = cpd_channels
-        self.activation_fn = activation_fn
+
+        activation_fn = nn.LeakyReLU()
 
         # Add autoregressive layers
         layers_list = []

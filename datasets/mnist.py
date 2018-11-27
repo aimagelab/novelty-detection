@@ -1,16 +1,17 @@
 from typing import Tuple
 from typing import Union
+import torch
 import numpy as np
 from torchvision import datasets
 from torchvision import transforms
 
-from datasets.base import DatasetBase
+from datasets.base import OneClassDataset
 from datasets.transforms import OCToFloatTensor2D
-from datasets.transforms import ToFloatTensor2D
 from datasets.transforms import ToFloat32
+from datasets.transforms import ToFloatTensor2D
 
 
-class MNIST(DatasetBase):
+class MNIST(OneClassDataset):
     """
     Models MNIST dataset for one class classification.
     """
@@ -84,7 +85,7 @@ class MNIST(DatasetBase):
         return self.length
 
     def __getitem__(self, i):
-        # type: (int) -> Tuple[FloatTensor, Union[FloatTensor, int]]
+        # type: (int) -> Tuple[torch.Tensor, Union[torch.Tensor, int]]
         """
         Provides the i-th example.
         """
@@ -110,7 +111,7 @@ class MNIST(DatasetBase):
         return sample
 
     @property
-    def all_tests(self):
+    def test_classes(self):
         # type: () -> np.ndarray
         """
         Returns all test possible test sets (the 10 classes).

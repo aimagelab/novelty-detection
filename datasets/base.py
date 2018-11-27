@@ -17,6 +17,35 @@ class DatasetBase(Dataset):
         """
         pass
 
+    @property
+    @abstractmethod
+    def shape(self):
+        """
+        Returns the shape of examples.
+        """
+        pass
+
+    @abstractmethod
+    def __len__(self):
+        """
+        Returns the number of examples.
+        """
+        pass
+
+    @abstractmethod
+    def __getitem__(self, i):
+        """
+        Provides the i-th example.
+        """
+        pass
+
+
+class OneClassDataset(DatasetBase):
+    """
+    Base class for all one-class classification datasets.
+    """
+    __metaclass__ = ABCMeta
+
     @abstractmethod
     def val(self, *args):
         """
@@ -26,17 +55,24 @@ class DatasetBase(Dataset):
 
     @property
     @abstractmethod
-    def shape(self):
+    def test_classes(self):
         """
-        Returns the shape of examples.
+        Returns all test possible test classes.
         """
         pass
 
+
+class VideoAnomalyDetectionDataset(DatasetBase):
+    """
+    Base class for all video anomaly detection datasets.
+    """
+    __metaclass__ = ABCMeta
+
     @property
     @abstractmethod
-    def all_tests(self):
+    def test_videos(self):
         """
-        Returns all test possible test sets.
+        Returns all test video ids.
         """
         pass
 
@@ -52,5 +88,16 @@ class DatasetBase(Dataset):
     def __getitem__(self, i):
         """
         Provides the i-th example.
+        """
+        pass
+
+    @abstractmethod
+    def load_test_sequence_gt(self, video_id):
+        # type: (str) -> np.ndarray
+        """
+        Loads the groundtruth of a test video in memory.
+
+        :param video_id: the id of the test video for which the groundtruth has to be loaded.
+        :return: the groundtruth of the video in a np.ndarray, with shape (n_frames,).
         """
         pass

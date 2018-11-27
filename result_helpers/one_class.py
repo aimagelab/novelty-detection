@@ -8,10 +8,11 @@ from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datasets.base import DatasetBase
+from datasets.base import OneClassDataset
 from models.base import BaseModule
 from models.loss_functions import LSALoss
 from utils import novelty_score
+from utils import normalize
 
 
 class OneClassResultHelper(object):
@@ -20,7 +21,7 @@ class OneClassResultHelper(object):
     """
 
     def __init__(self, dataset, model, checkpoints_dir, output_file):
-        # type: (DatasetBase, BaseModule, str, str) -> None
+        # type: (OneClassDataset, BaseModule, str, str) -> None
         """
         Class constructor.
 
@@ -51,7 +52,7 @@ class OneClassResultHelper(object):
         all_metrics = []
 
         # Start iteration over classes
-        for cl_idx, cl in enumerate(self.dataset.all_tests):
+        for cl_idx, cl in enumerate(self.dataset.test_classes):
 
             # Load the checkpoint
             self.model.load_w(join(self.checkpoints_dir, f'{cl}.pkl'))
@@ -78,8 +79,12 @@ class OneClassResultHelper(object):
                 sample_rec[i] = - self.loss.reconstruction_loss
                 sample_y[i] = y.item()
 
+            # Normalize scores
+            sample_llk = normalize(sample_llk, min_llk, max_llk)
+            sample_rec = normalize(sample_rec, min_rec, max_rec)
+
             # Compute the normalized novelty score
-            sample_ns = novelty_score(sample_llk, sample_rec, min_llk, max_llk, min_rec, max_rec)
+            sample_ns = novelty_score(sample_llk, sample_rec)
 
             # Compute AUROC for this class
             this_class_metrics = [

@@ -5,13 +5,13 @@ from torch import FloatTensor
 from torchvision import datasets
 from torchvision import transforms
 
-from datasets.base import DatasetBase
+from datasets.base import OneClassDataset
 from datasets.transforms import OCToFloatTensor2D
 from datasets.transforms import ToFloat32
 from datasets.transforms import ToFloatTensor2D
 
 
-class CIFAR10(DatasetBase):
+class CIFAR10(OneClassDataset):
     """
     Models CIFAR10 dataset for one class classification.
     """
@@ -108,7 +108,7 @@ class CIFAR10(DatasetBase):
         return sample
 
     @property
-    def all_tests(self):
+    def test_classes(self):
         # type: () -> np.ndarray
         """
         Returns all test possible test sets (the 10 classes).
