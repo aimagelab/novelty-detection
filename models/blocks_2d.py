@@ -1,14 +1,15 @@
+from typing import List
+from typing import Optional
+
 import torch
 import torch.nn as nn
 from torch.nn import Module
-from torch import FloatTensor
-from typing import List
-from typing import Optional
+
 from models.base import BaseModule
 
 
 def residual_op(x, functions, bns, activation_fn):
-    # type: (FloatTensor, List[Module, Module, Module], List[Module, Module, Module], Module) -> FloatTensor
+    # type: (torch.Tensor, List[Module, Module, Module], List[Module, Module, Module], Module) -> torch.Tensor
     """
     Implements a global residual operation.
 
@@ -115,7 +116,7 @@ class DownsampleBlock(BaseBlock):
         self.bn2a = self.get_bn()
 
     def forward(self, x):
-        # type: (FloatTensor) -> FloatTensor
+        # type: (torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
         :param x: the input tensor
@@ -144,7 +145,7 @@ class UpsampleBlock(BaseBlock):
         """
         super(UpsampleBlock, self).__init__(channel_in, channel_out, activation_fn, use_bn, use_bias)
 
-        # convolution to halve the dimensions
+        # Convolutions
         self.conv1a = nn.ConvTranspose2d(channel_in, channel_out, kernel_size=5,
                                          padding=2, stride=2, output_padding=1, bias=use_bias)
         self.conv1b = nn.Conv2d(in_channels=channel_out, out_channels=channel_out, kernel_size=3,
@@ -152,32 +153,61 @@ class UpsampleBlock(BaseBlock):
         self.conv2a = nn.ConvTranspose2d(channel_in, channel_out, kernel_size=1,
                                          padding=0, stride=2, output_padding=1, bias=use_bias)
 
+        # Batch Normalization layers
         self.bn1a = self.get_bn()
         self.bn1b = self.get_bn()
         self.bn2a = self.get_bn()
 
-    def forward(self, x: torch.FloatTensor):
-        return residual_op(x,
-                           functions=[self.conv1a, self.conv1b, self.conv2a],
-                           bns=[self.bn1a, self.bn1b, self.bn2a],
-                           activation_fn=self._activation_fn)
+    def forward(self, x):
+        # type: (torch.Tensor) -> torch.Tensor
+        """
+        Forward propagation.
+        :param x: the input tensor
+        :return: the output tensor
+        """
+        return residual_op(
+            x,
+            functions=[self.conv1a, self.conv1b, self.conv2a],
+            bns=[self.bn1a, self.bn1b, self.bn2a],
+            activation_fn=self._activation_fn
+        )
 
 
 class ResidualBlock(BaseBlock):
-    def __init__(self, channel_in: int, channel_out: int, activation_fn: nn.Module, use_bn: bool = True,
-                 use_bias: bool = False):
+    """ Implements a Residual block for images (Fig. 1ii). """
+    def __init__(self, channel_in, channel_out, activation_fn, use_bn=True, use_bias=False):
+        # type: (int, int, Module, bool, bool) -> None
+        """
+        Class constructor.
+
+        :param channel_in: number of input channels.
+        :param channel_out: number of output channels.
+        :param activation_fn: activation to be employed.
+        :param use_bn: whether or not to use batch-norm.
+        :param use_bias: whether or not to use bias.
+        """
         super(ResidualBlock, self).__init__(channel_in, channel_out, activation_fn, use_bn, use_bias)
 
+        # Convolutions
         self.conv1 = nn.Conv2d(in_channels=channel_in, out_channels=channel_out, kernel_size=3,
                                padding=1, stride=1, bias=use_bias)
         self.conv2 = nn.Conv2d(in_channels=channel_out, out_channels=channel_out, kernel_size=3,
                                padding=1, stride=1, bias=use_bias)
 
+        # Batch Normalization layers
         self.bn1 = self.get_bn()
         self.bn2 = self.get_bn()
 
-    def forward(self, x: torch.FloatTensor):
-        return residual_op(x,
-                           functions=[self.conv1, self.conv2, None],
-                           bns=[self.bn1, self.bn2, None],
-                           activation_fn=self._activation_fn)
+    def forward(self, x):
+        # type: (torch.Tensor) -> torch.Tensor
+        """
+        Forward propagation.
+        :param x: the input tensor
+        :return: the output tensor
+        """
+        return residual_op(
+            x,
+            functions=[self.conv1, self.conv2, None],
+            bns=[self.bn1, self.bn2, None],
+            activation_fn=self._activation_fn
+        )

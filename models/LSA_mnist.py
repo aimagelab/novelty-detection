@@ -1,9 +1,10 @@
 from functools import reduce
 from operator import mul
 from typing import Tuple
+
 import torch
 import torch.nn as nn
-from torch import FloatTensor
+
 from models.base import BaseModule
 from models.blocks_2d import DownsampleBlock
 from models.blocks_2d import UpsampleBlock
@@ -48,7 +49,7 @@ class Encoder(BaseModule):
         )
 
     def forward(self, x):
-        # types: (FloatTensor) -> FloatTensor
+        # types: (torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 
@@ -103,7 +104,7 @@ class Decoder(BaseModule):
         )
 
     def forward(self, x):
-        # types: (FloatTensor) -> FloatTensor
+        # types: (torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 
@@ -159,12 +160,12 @@ class LSAMNIST(BaseModule):
         )
 
     def forward(self, x):
-        # type: (FloatTensor) -> Tuple[FloatTensor, FloatTensor, FloatTensor]
+        # type: (torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         """
         Forward propagation.
 
         :param x: the input batch of images.
-        :return: a tuple of FloatTensors holding reconstructions, latent vectors and CPD estimates.
+        :return: a tuple of torch.Tensors holding reconstructions, latent vectors and CPD estimates.
         """
         h = x
 

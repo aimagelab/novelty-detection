@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from models.base import BaseModule
 
-from torch import FloatTensor
+from models.base import BaseModule
 
 
 class AutoregressionLoss(BaseModule):
@@ -27,7 +26,7 @@ class AutoregressionLoss(BaseModule):
         self.eps = np.finfo(float).eps
 
     def forward(self, z, z_dist):
-        # type: (FloatTensor, FloatTensor) -> FloatTensor
+        # type: (torch.Tensor, torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 
@@ -35,7 +34,6 @@ class AutoregressionLoss(BaseModule):
         :param z_dist: the batch of estimated cpds.
         :return: the mean log-likelihood (averaged along the batch axis).
         """
-
         z_d = z.detach()
 
         # Apply softmax

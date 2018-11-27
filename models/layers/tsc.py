@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch import FloatTensor
 
 from models.base import BaseModule
 
@@ -30,7 +29,7 @@ class TemporallySharedFullyConnection(BaseModule):
         self.linear = nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
 
     def forward(self, x):
-        # type: (FloatTensor) -> FloatTensor
+        # type: (torch.Tensor) -> torch.Tensor
         """
         Forward function.
 

@@ -1,8 +1,9 @@
+from typing import List
+
 import torch
 import torch.nn as nn
-from torch import FloatTensor
+
 from models.base import BaseModule
-from typing import List
 
 
 class MaskedFullyConnection(BaseModule, nn.Linear):
@@ -24,7 +25,7 @@ class MaskedFullyConnection(BaseModule, nn.Linear):
         self.out_channels = out_channels
         super(MaskedFullyConnection, self).__init__(*args, **kwargs)
 
-        assert mask_type in {'A', 'B'}
+        assert mask_type in ['A', 'B']
         self.register_buffer('mask', self.weight.data.clone())
 
         # Build mask
@@ -40,7 +41,7 @@ class MaskedFullyConnection(BaseModule, nn.Linear):
         self.weight.mask = self.mask
 
     def forward(self, x):
-        # type: (FloatTensor) -> FloatTensor
+        # type: (torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 
@@ -129,7 +130,7 @@ class Estimator1D(BaseModule):
         self.layers = nn.Sequential(*layers_list)
 
     def forward(self, x):
-        # type: (FloatTensor) -> FloatTensor
+        # type: (torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 

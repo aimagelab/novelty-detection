@@ -1,6 +1,8 @@
-from models.base import BaseModule
+import torch
 import torch.nn as nn
-from torch import FloatTensor
+
+from models.base import BaseModule
+
 
 class MaskedConv3d(BaseModule, nn.Conv3d):
     """
@@ -16,7 +18,7 @@ class MaskedConv3d(BaseModule, nn.Conv3d):
         self.mask[:, :, kT // 2 + 1:] = 0
 
     def forward(self, x):
-        # type: (FloatTensor) -> FloatTensor
+        # type: (torch.Tensor) -> torch.Tensor
         """
         Performs the forward pass.
 
@@ -25,6 +27,3 @@ class MaskedConv3d(BaseModule, nn.Conv3d):
         """
         self.weight.data *= self.mask
         return super(MaskedConv3d, self).forward(x)
-
-    def __call__(self, *args, **kwargs):
-        return super(MaskedConv3d, self).__call__(*args, **kwargs)

@@ -44,7 +44,7 @@ def test_cifar():
 def test_ucsdped2():
     # type: () -> None
     """
-    Performs video anomaly detection tests on UCSD Ped2
+    Performs video anomaly detection tests on UCSD Ped2.
     """
     set_random_seed(30101990)
 

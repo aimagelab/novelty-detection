@@ -1,6 +1,7 @@
 from abc import ABCMeta
 from abc import abstractmethod
 
+import numpy as np
 from torch.utils.data import Dataset
 
 

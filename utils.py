@@ -1,6 +1,7 @@
 import collections
 import random
 import re
+from typing import List
 
 import numpy as np
 import torch
@@ -36,7 +37,7 @@ def normalize(samples, min, max):
 
 
 def novelty_score(sample_llk_norm, sample_rec_norm):
-    # type: (np.ndarray, np.ndarray, float, float, float, float) -> np.ndarray
+    # type: (np.ndarray, np.ndarray) -> np.ndarray
     """
     Computes the normalized novelty score given likelihood scores, reconstruction scores
     and normalization coefficients (Eq. 9-10).
@@ -50,13 +51,16 @@ def novelty_score(sample_llk_norm, sample_rec_norm):
 
     return ns
 
+
 def concat_collate(batch):
+    # type: (List[torch.Tensor]) -> torch.Tensor
     """
     Puts each data field into a tensor stacking along the first dimension.
     This is different to the default pytorch collate that stacks samples rather than
     concatenating them.
-    """
 
+    :param batch: the input batch to be collated.
+    """
     error_msg = "batch must contain tensors, numbers, dicts or lists; found {}"
     elem_type = type(batch[0])
     if isinstance(batch[0], torch.Tensor):

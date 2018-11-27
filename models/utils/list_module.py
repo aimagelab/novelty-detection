@@ -4,7 +4,7 @@ import torch.nn as nn
 class ListModule(nn.Module):
     """
     Pytorch list module.
-    See [1] for details
+    See [1] for details.
     """
     def __init__(self, *args):
         super(ListModule, self).__init__()

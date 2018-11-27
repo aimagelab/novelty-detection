@@ -1,7 +1,8 @@
 from typing import Tuple
 from typing import Union
+
 import numpy as np
-from torch import FloatTensor
+import torch
 from torchvision import datasets
 from torchvision import transforms
 
@@ -85,7 +86,7 @@ class CIFAR10(OneClassDataset):
         return self.length
 
     def __getitem__(self, i):
-        # type: (int) -> Tuple[FloatTensor, Union[FloatTensor, int]]
+        # type: (int) -> Tuple[torch.Tensor, Union[torch.Tensor, int]]
         """
         Provides the i-th example.
         """

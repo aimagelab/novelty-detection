@@ -1,6 +1,8 @@
+import torch
 import torch.nn as nn
-from models.loss_functions.reconstruction_loss import ReconstructionLoss
+
 from models.loss_functions.autoregression_loss import AutoregressionLoss
+from models.loss_functions.reconstruction_loss import ReconstructionLoss
 
 
 class LSALoss(nn.Module):
@@ -31,7 +33,7 @@ class LSALoss(nn.Module):
         self.total_loss = None
 
     def forward(self, x, x_r, z, z_dist):
-        # type: (FloatTensor, FloatTensor, FloatTensor, FloatTensor) -> FloatTensor
+        # type: (torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 

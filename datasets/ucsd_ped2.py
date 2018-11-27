@@ -25,12 +25,13 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         """
         Class constructor.
 
-        :param path: The folder in which UCSD is stored
+        :param path: The folder in which UCSD is stored.
         """
         super(UCSDPed2, self).__init__()
 
         self.path = join(path, 'UCSDped2')
 
+        # Test directory
         self.test_dir = join(self.path, 'Test')
 
         # Transforms
@@ -54,7 +55,7 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         :return: The list of test ids.
         """
         return sorted([basename(d) for d in glob(join(self.test_dir, '**'))
-                       if isdir(d) and not 'gt' in basename(d)])
+                       if isdir(d) and 'gt' not in basename(d)])
 
     def load_test_sequence_frames(self, video_id):
         # type: (str) -> np.ndarray
@@ -93,12 +94,6 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
             clip_gt.append(np.max(img))  # if at least one pixel is 1, then anomaly
         clip_gt = np.stack(clip_gt)
         return clip_gt
-
-    def val(self, *args):
-        """
-        Sets the dataset in validation mode. Not implemented
-        """
-        raise NotImplementedError
 
     def test(self, video_id):
         # type: (str) -> None

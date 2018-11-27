@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+
 from models.base import BaseModule
 
 
@@ -15,7 +15,7 @@ class ReconstructionLoss(BaseModule):
         super(ReconstructionLoss, self).__init__()
 
     def forward(self, x, x_r):
-        # type: (FloatTensor, FloatTensor) -> FloatTensor
+        # type: (torch.Tensor, torch.Tensor) -> torch.Tensor
         """
         Forward propagation.
 
