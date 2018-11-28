@@ -9,7 +9,19 @@ Specifically, performs:
 * video anomaly detection on UCSD Ped2.
 * video anomaly detection on ShanghaiTech.
 
+### 0 - Clone this repo
+First things first, clone this repository locally via git.
+```
+git clone https://github.com/cvpr19-858/novelty-detection.git
+cd novelty-detection
+```
+
 ### 1 - Environment
+This code runs on Python 3.6.
+The easiest way to set up the environment is via `pip` and the file `requirements.txt`:
+```
+pip install -r requirements.txt
+```
 
 ### 2 - Datasets
 MNIST and CIFAR-10 will be downloaded for you by torchvision. 
