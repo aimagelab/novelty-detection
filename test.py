@@ -86,7 +86,7 @@ def parse_arguments():
     :return: the command line arguments.
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataset', type=str,
+    parser.add_argument('dataset', type=str,
                         help='The name of the dataset to perform tests on.'
                              'Choose among `mnist`, `cifar10`, `ucsd-ped2`, `shanghaitech`', metavar='')
 
