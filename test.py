@@ -67,7 +67,7 @@ def test_shanghaitech():
     """
 
     # Build dataset and model
-    dataset = SHANGHAITECH(path='data/SHANGHAITECH')
+    dataset = SHANGHAITECH(path='data/shanghaitech')
     model = LSAShanghaiTech(input_shape=dataset.shape, code_length=64, cpd_channels=100).cuda().eval()
 
     # Set up result helper and perform test
