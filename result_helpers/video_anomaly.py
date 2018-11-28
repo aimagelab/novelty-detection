@@ -17,30 +17,53 @@ from utils import novelty_score
 class ResultsAccumulator:
     """
     Accumulates results in a buffer for a sliding window
-    results computation. Similar to VideoReconstructionSaver
-    but for averaging results over different clips
+    results computation. Employed to get frame-level scores
+    from clip-level scores.
+    ` In order to recover the anomaly score of each
+    frame, we compute the mean score of all clips in which it
+    appears`
     """
-
     def __init__(self, time_steps):
+        # type: (int) -> None
+        """
+        Class constructor.
+
+        :param time_steps: the number of frames each clip holds.
+        """
+
+        # This buffers rotate.
         self._buffer = np.zeros(shape=(time_steps,), dtype=np.float32)
         self._counts = np.zeros(shape=(time_steps,))
 
-    def push(self, clip_nll):
-        """ clip_nll is a number. """
+    def push(self, score):
+        # type: (float) -> None
+        """
+        Pushes the score of a clip into the buffer.
+        :param score: the score of a clip
+        """
 
-        # update buffers
-        self._buffer += clip_nll
+        # Update buffer and counts
+        self._buffer += score
         self._counts += 1
 
     def get_next(self):
-        # save first in buffer
+        # type: () -> float
+        """
+        Gets the next frame (the first in the buffer) score,
+        computed as the mean of the clips in which it appeared,
+        and rolls the buffers.
+
+        :return: the averaged score of the frame exiting the buffer.
+        """
+
+        # Return first in buffer
         ret = self._buffer[0] / self._counts[0]
 
-        # roll time backwards D=
+        # Roll time backwards
         self._buffer = np.roll(self._buffer, shift=-1)
         self._counts = np.roll(self._counts, shift=-1)
 
-        # zero out final frame
+        # Zero out final frame (next to be filled)
         self._buffer[-1] = 0
         self._counts[-1] = 0
 
@@ -48,6 +71,10 @@ class ResultsAccumulator:
 
     @property
     def results_left(self):
+        # type: () -> np.int32
+        """
+        Returns the number of frames still in the buffer.
+        """
         return np.sum(self._counts != 0).astype(np.int32)
 
 
@@ -63,7 +90,7 @@ class VideoAnomalyDetectionResultHelper(object):
 
         :param dataset: dataset class.
         :param model: pytorch model to evaluate.
-        :param checkpoints: path of the checkpoint for the model.
+        :param checkpoint: path of the checkpoint for the model.
         :param output_file: text file where to save results.
         """
         self.dataset = dataset
@@ -106,6 +133,7 @@ class VideoAnomalyDetectionResultHelper(object):
             self.dataset.test(video_id)
             loader = DataLoader(self.dataset, collate_fn=self.dataset.collate_fn)
 
+            # Build score containers
             sample_llk = np.zeros(shape=(len(loader) + t - 1,))
             sample_rec = np.zeros(shape=(len(loader) + t - 1,))
             sample_y = self.dataset.load_test_sequence_gt(video_id)
@@ -116,13 +144,13 @@ class VideoAnomalyDetectionResultHelper(object):
 
                 self.loss(x, x_r, z, z_dist)
 
-                # feed results accumulators
+                # Feed results accumulators
                 results_accumulator_llk.push(self.loss.autoregression_loss)
                 results_accumulator_rec.push(self.loss.reconstruction_loss)
                 sample_llk[i] = results_accumulator_llk.get_next()
                 sample_rec[i] = results_accumulator_rec.get_next()
 
-            # get last results
+            # Get last results
             while results_accumulator_llk.results_left != 0:
                 index = (- results_accumulator_llk.results_left)
                 sample_llk[index] = results_accumulator_llk.get_next()

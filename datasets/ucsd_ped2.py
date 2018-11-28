@@ -35,7 +35,7 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
         # Test directory
         self.test_dir = join(self.path, 'Test')
 
-        # Transforms
+        # Transform
         self.transform = transforms.Compose([ToFloatTensor3D(), ToCrops(self.raw_shape, self.crop_shape)])
 
         # Load all test ids
@@ -136,6 +136,10 @@ class UCSDPed2(VideoAnomalyDetectionDataset):
 
     @property
     def test_videos(self):
+        # type: () -> List[str]
+        """
+        Returns all available test videos.
+        """
         return self.test_ids
 
     def __len__(self):

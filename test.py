@@ -1,11 +1,14 @@
-from datasets import MNIST
+import argparse
+from argparse import Namespace
+
 from datasets import CIFAR10
-from datasets import UCSDPed2
+from datasets import MNIST
 from datasets import SHANGHAITECH
-from models import LSAMNIST
+from datasets import UCSDPed2
 from models import LSACIFAR10
-from models import LSAUCSD
+from models import LSAMNIST
 from models import LSAShanghaiTech
+from models import LSAUCSD
 from result_helpers import OneClassResultHelper
 from result_helpers import VideoAnomalyDetectionResultHelper
 from utils import set_random_seed
@@ -16,7 +19,6 @@ def test_mnist():
     """
     Performs One-class classification tests on MNIST
     """
-    set_random_seed(30101990)
 
     # Build dataset and model
     dataset = MNIST(path='data/MNIST')
@@ -32,7 +34,6 @@ def test_cifar():
     """
     Performs One-class classification tests on CIFAR
     """
-    set_random_seed(30101990)
 
     # Build dataset and model
     dataset = CIFAR10(path='data/CIFAR10')
@@ -48,7 +49,6 @@ def test_ucsdped2():
     """
     Performs video anomaly detection tests on UCSD Ped2.
     """
-    set_random_seed(30101990)
 
     # Build dataset and model
     dataset = UCSDPed2(path='data/UCSD')
@@ -65,7 +65,6 @@ def test_shanghaitech():
     """
     Performs video anomaly detection tests on ShanghaiTech.
     """
-    set_random_seed(30101990)
 
     # Build dataset and model
     dataset = SHANGHAITECH(path='data/SHANGHAITECH')
@@ -79,4 +78,42 @@ def test_shanghaitech():
     helper.test_video_anomaly_detection()
 
 
-test_shanghaitech()
+def parse_arguments():
+    # type: () -> Namespace
+    """
+    Argument parser.
+
+    :return: the command line arguments.
+    """
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--dataset', type=str,
+                        help='The name of the dataset to perform tests on.'
+                             'Choose among `mnist`, `cifar10`, `ucsd-ped2`, `shanghaitech`', metavar='')
+
+    return parser.parse_args()
+
+
+def main():
+
+    # Parse command line arguments
+    args = parse_arguments()
+
+    # Lock seeds
+    set_random_seed(30101990)
+
+    # Run test
+    if args.dataset == 'mnist':
+        test_mnist()
+    if args.dataset == 'cifar10':
+        test_cifar()
+    if args.dataset == 'ucsd-ped2':
+        test_ucsdped2()
+    if args.dataset == 'shanghaitech':
+        test_shanghaitech()
+    else:
+        raise ValueError(f'Unknown dataset: {args.dataset}')
+
+
+# Entry point
+if __name__ == '__main__':
+    main()

@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 
@@ -9,8 +11,17 @@ from models.layers.tsc import TemporallySharedFullyConnection
 
 
 class Encoder(BaseModule):
-
+    """
+    ShanghaiTech model encoder.
+    """
     def __init__(self, input_shape, code_length):
+        # type: (Tuple[int, int, int, int], int) -> None
+        """
+        Class constructor:
+
+        :param input_shape: the shape of UCSD Ped2 samples.
+        :param code_length: the dimensionality of latent vectors.
+        """
         super(Encoder, self).__init__()
 
         self.input_shape = input_shape
@@ -20,6 +31,7 @@ class Encoder(BaseModule):
 
         activation_fn = nn.LeakyReLU()
 
+        # Convolutional network
         self.conv = nn.Sequential(
             DownsampleBlock(channel_in=c, channel_out=8, activation_fn=activation_fn, stride=(1, 2, 2)),
             DownsampleBlock(channel_in=8, channel_out=16, activation_fn=activation_fn, stride=(1, 2, 2)),
@@ -30,6 +42,7 @@ class Encoder(BaseModule):
 
         self.deepest_shape = (64, t // 4, h // 32, w // 32)
 
+        # FC network
         dc, dt, dh, dw = self.deepest_shape
         self.tdl = nn.Sequential(
             TemporallySharedFullyConnection(in_features=(dc * dh * dw), out_features=512),
@@ -39,11 +52,17 @@ class Encoder(BaseModule):
         )
 
     def forward(self, x):
+        # types: (torch.Tensor) -> torch.Tensor
+        """
+        Forward propagation.
 
+        :param x: the input batch of patches.
+        :return: the batch of latent vectors.
+        """
         h = x
         h = self.conv(h)
 
-        # reshape for tdd
+        # Reshape for fully connected sub-network (flatten)
         c, t, height, width = self.deepest_shape
         h = torch.transpose(h, 1, 2).contiguous()
         h = h.view(-1, t, (c * height * width))
@@ -52,11 +71,20 @@ class Encoder(BaseModule):
         return o
 
 
-class ANDDecoder(BaseModule):
-
+class Decoder(BaseModule):
+    """
+    ShanghaiTech model decoder.
+    """
     def __init__(self, code_length, deepest_shape, output_shape):
+        # type: (int, Tuple[int, int, int, int], Tuple[int, int, int, int]) -> None
+        """
+        Class constructor.
 
-        super(ANDDecoder, self).__init__()
+        :param code_length: the dimensionality of latent vectors.
+        :param deepest_shape: the dimensionality of the encoder's deepest convolutional map.
+        :param output_shape: the shape of UCSD Ped2 samples.
+        """
+        super(Decoder, self).__init__()
 
         self.code_length = code_length
         self.deepest_shape = deepest_shape
@@ -66,6 +94,7 @@ class ANDDecoder(BaseModule):
 
         activation_fn = nn.LeakyReLU()
 
+        # FC network
         self.tdl = nn.Sequential(
             TemporallySharedFullyConnection(in_features=code_length, out_features=512),
             nn.Tanh(),
@@ -73,6 +102,7 @@ class ANDDecoder(BaseModule):
             activation_fn
         )
 
+        # Convolutional network
         self.conv = nn.Sequential(
             UpsampleBlock(channel_in=dc, channel_out=64,
                           activation_fn=activation_fn, stride=(2, 2, 2), output_padding=(1, 1, 1)),
@@ -88,11 +118,17 @@ class ANDDecoder(BaseModule):
         )
 
     def forward(self, x):
+        # types: (torch.Tensor) -> torch.Tensor
+        """
+        Forward propagation.
 
+        :param x: the batch of latent vectors.
+        :return: the batch of reconstructions.
+        """
         h = x
         h = self.tdl(h)
 
-        # reshape
+        # Reshape to encoder's deepest convolutional shape
         h = torch.transpose(h, 1, 2).contiguous()
         h = h.view(len(h), *self.deepest_shape)
 
@@ -103,26 +139,38 @@ class ANDDecoder(BaseModule):
 
 
 class LSAShanghaiTech(BaseModule):
-
+    """
+    LSA model for ShanghaiTech video anomaly detection.
+    """
     def __init__(self, input_shape, code_length, cpd_channels):
+        # type: (Tuple[int, int, int, int], int, int) -> None
+        """
+        Class constructor.
 
+        :param input_shape: the shape of UCSD Ped2 samples.
+        :param code_length: the dimensionality of latent vectors.
+        :param cpd_channels: number of bins in which the multinomial works.
+        """
         super(LSAShanghaiTech, self).__init__()
 
         self.input_shape = input_shape
         self.code_length = code_length
         self.cpd_channels = cpd_channels
 
+        # Build encoder
         self.encoder = Encoder(
             input_shape=input_shape,
             code_length=code_length
         )
 
-        self.decoder = ANDDecoder(
+        # Build decoder
+        self.decoder = Decoder(
             code_length=code_length,
             deepest_shape=self.encoder.deepest_shape,
             output_shape=input_shape
         )
 
+        # Build estimator
         self.estimator = Estimator2D(
             code_length=code_length,
             fm_list=[4, 4],
@@ -130,13 +178,22 @@ class LSAShanghaiTech(BaseModule):
         )
 
     def forward(self, x):
+        # type: (torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        """
+        Forward propagation.
 
+        :param x: the input batch of patches.
+        :return: a tuple of torch.Tensors holding reconstructions, latent vectors and CPD estimates.
+        """
         h = x
 
+        # Produce representations
         z = self.encoder(h)
 
+        # Estimate CPDs with autoregression
         z_dist = self.estimator(z)
 
+        # Reconstruct x
         x_r = self.decoder(z)
         x_r = x_r.view(-1, *self.input_shape)
 
