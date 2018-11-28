@@ -51,7 +51,7 @@ def test_ucsdped2():
     """
 
     # Build dataset and model
-    dataset = UCSDPed2(path='data/UCSD')
+    dataset = UCSDPed2(path='data/UCSD_Anomaly_Dataset.v1p2')
     model = LSAUCSD(input_shape=dataset.shape, code_length=64, cpd_channels=100).cuda().eval()
 
     # Set up result helper and perform test
@@ -104,11 +104,11 @@ def main():
     # Run test
     if args.dataset == 'mnist':
         test_mnist()
-    if args.dataset == 'cifar10':
+    elif args.dataset == 'cifar10':
         test_cifar()
-    if args.dataset == 'ucsd-ped2':
+    elif args.dataset == 'ucsd-ped2':
         test_ucsdped2()
-    if args.dataset == 'shanghaitech':
+    elif args.dataset == 'shanghaitech':
         test_shanghaitech()
     else:
         raise ValueError(f'Unknown dataset: {args.dataset}')
