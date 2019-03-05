@@ -12,7 +12,7 @@ Please cite with the following BibTeX:
 }
 ```
 
-![sample results](images/model.pdf)
+![sample results](images/model.png)
 
 Specifically, performs:
 * one class classification on MNIST.
