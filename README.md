@@ -1,7 +1,18 @@
 # Latent Space Autoregression for Novelty Detection
-#### CVPR19 - Submission id 858.
 
-This repository contains Pytorch code to replicate experiments presented in the paper.
+This repository contains Pytorch code to replicate experiments in the CVPR19 paper "Latent Space Autoregression for Novelty Detection".
+
+Please cite with the following BibTeX:
+```
+@inproceedings{abati2019latent,
+  title={{Latent Space Autoregression for Novelty Detection}},
+  author={Abati, Davide and Porrello, Angelo and Calderara, Simone and Cucchiara, Rita},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision and Pattern Recognition},
+  year={2019}
+}
+```
+
+![sample results](images/model.pdf)
 
 Specifically, performs:
 * one class classification on MNIST.
