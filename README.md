@@ -46,7 +46,7 @@ tar -xzvf <path-to-shanghaitech.tar.gz> -C data
 ```
 
 ### 3 - Model checkpoints
-Checkpoints for all trained models are available [here](http://imagelab.ing.unimore.it/files/lsa-novelty-detection/checkpoints.tar.gz).
+Checkpoints for all trained models are available [here](https://ailb-web.ing.unimore.it/publicfiles/drive/lsa-novelty-detection/checkpoints.tar.gz).
 
 Please untar them into the `checkpoints` folder as follows:
 ```
